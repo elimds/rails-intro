@@ -7,12 +7,34 @@
   end
 
   def index
+    @movies = Movie.find(:all, :order => (params[:sort]))
+    if params[:ratings]
+      @movies = Movie.where(rating: params[:ratings].keys).find(:all, :order => (params[:sort]))
+    end
+    @sort_by = params[:sort]
+    @all_ratings = Movie.all_ratings
+    @ratings = params[:ratings]
+    if params[:ratings].nil?
+      @ratings = Hash.new
+      @all_ratings.each do |value|
+        @ratings[value] = "true" 
+      end
+    end
+  end
+
+  def index_bkp
     if (params[:sort])
       @movies = Movie.order(params[:sort])
       @sort_by = params[:sort]
+      @mark = true
     else
       @movies = Movie.all
+      @mark
     end
+    if (params[:ratings])
+      @movies = @movies.find(rating: params[:ratings].keys) 
+    end
+    @all_ratings = Movie.all_ratings
   end
 
   def new

@@ -44,7 +44,6 @@
       @all_ratings.each do |value|
         @ratings[value] = value
       end
-      redirect = true
     end
     
     if redirect

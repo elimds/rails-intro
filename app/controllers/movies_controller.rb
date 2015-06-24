@@ -7,34 +7,50 @@
   end
 
   def index
-    @movies = Movie.find(:all, :order => (params[:sort]))
-    if params[:ratings]
-      @movies = Movie.where(rating: params[:ratings].keys).find(:all, :order => (params[:sort]))
+    redirect = false
+    
+    # Trata a variável de ordenação da lista  
+    if params[:sort_by].nil? and !session[:sort_by].nil?
+      @sort_by = session[:sort_by] 
+      redirect = true
+    else
+      @sort_by = params[:sort_by]
     end
-    @sort_by = params[:sort]
+    session[:sort_by] = @sort_by
+    
+    # Trata a variável de filtro da lista
     @all_ratings = Movie.all_ratings
-    @ratings = params[:ratings]
-    if params[:ratings].nil?
+    if params[:ratings].nil? and !session[:ratings].nil?
+      @ratings = session[:ratings]
+      redirect = true
+    else
+      @ratings = params[:ratings]
+    end
+    session[:ratings] = @ratings
+    
+    if @ratings
+      # Recupera a lista de filmes de acordo com o filtro
+      @movies = Movie.where(rating: @ratings.keys) 
+      # Aplica ordenação de acordo com a opção do usuário
+      @movies = @movies.find(:all, :order => (@sort_by)) if @sort_by
+    else
+      # Recupera a lista completa de filmes
+      @movies = Movie.find(:all, :order => (params[:sort]))
+    end
+    
+    # Caso não exista nenhum valor para o filtro, então são marcadas todas as opções
+    if params[:ratings].nil? and session[:ratings].nil?
       @ratings = Hash.new
       @all_ratings.each do |value|
-        @ratings[value] = "true" 
+        @ratings[value] = value
       end
     end
-  end
-
-  def index_bkp
-    if (params[:sort])
-      @movies = Movie.order(params[:sort])
-      @sort_by = params[:sort]
-      @mark = true
-    else
-      @movies = Movie.all
-      @mark
+    
+    if redirect
+      flash.keep
+      redirect_to movies_path({:sort_by => @sort_by, :ratings => @ratings})
     end
-    if (params[:ratings])
-      @movies = @movies.find(rating: params[:ratings].keys) 
-    end
-    @all_ratings = Movie.all_ratings
+    
   end
 
   def new
